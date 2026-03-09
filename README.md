@@ -30,3 +30,6 @@ Backend: Node.js, Express.js, RESTful API
 Database: PostgreSQL  
 Deployment: Vercel and Render  
 Version Control: GitHub
+
+### **Favorite Quotes**
+"I am  no man." - Eowyn (Lord of the Rings)
