@@ -77,7 +77,6 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-
 # Local Database Setup (Development Only)
 
 This project uses a **local PostgreSQL database** during development. Each team member will run their own database instance until we migrate to a shared cloud database (Neon/Vercel) later in the project.
@@ -88,9 +87,9 @@ This project uses a **local PostgreSQL database** during development. Each team 
 
 Make sure you have the following installed:
 
-* PostgreSQL
-* pgAdmin 4 (or another PostgreSQL GUI)
-* Node.js and npm
+- PostgreSQL
+- pgAdmin 4 (or another PostgreSQL GUI)
+- Node.js and npm
 
 ---
 
@@ -134,8 +133,8 @@ npx prisma migrate dev --name init
 
 This will:
 
-* Create all tables based on the Prisma schema
-* Generate the Prisma client
+- Create all tables based on the Prisma schema
+- Generate the Prisma client
 
 ---
 
@@ -161,9 +160,9 @@ Books in DB: 0
 
 ## 5. Development Workflow
 
-* Each developer has their **own local database**
-* Data is **not shared between team members**
-* The database schema is shared through Prisma migrations
+- Each developer has their **own local database**
+- Data is **not shared between team members**
+- The database schema is shared through Prisma migrations
 
 ---
 
@@ -187,9 +186,9 @@ npx prisma migrate dev
 
 ## 7. Important Notes
 
-* Do not edit the database manually unless necessary
-* Always pull the latest changes before running migrations
-* Only one person should modify the schema at a time to avoid conflicts
+- Do not edit the database manually unless necessary
+- Always pull the latest changes before running migrations
+- Only one person should modify the schema at a time to avoid conflicts
 
 ---
 
@@ -199,8 +198,8 @@ In later sprints, we will switch to a shared hosted database using Neon and depl
 
 At that point:
 
-* All developers will use the same `DATABASE_URL`
-* Data will be shared across the team
+- All developers will use the same `DATABASE_URL`
+- Data will be shared across the team
 
 ---
 
@@ -208,25 +207,24 @@ At that point:
 
 ### pgAdmin shows no servers
 
-* Ensure PostgreSQL is installed
-* Register a new server in pgAdmin using:
-
-  * Host: localhost
-  * Port: 5432
-  * Username: postgres
+- Ensure PostgreSQL is installed
+- Register a new server in pgAdmin using:
+    - Host: localhost
+    - Port: 5432
+    - Username: postgres
 
 ---
 
 ### Migration fails
 
-* Check your `DATABASE_URL`
-* Ensure PostgreSQL is running
-* Verify the database exists
+- Check your `DATABASE_URL`
+- Ensure PostgreSQL is running
+- Verify the database exists
 
 ---
 
 ### Cannot connect to database
 
-* Confirm username/password
-* Confirm port is 5432
-* Restart PostgreSQL service if needed
+- Confirm username/password
+- Confirm port is 5432
+- Restart PostgreSQL service if needed

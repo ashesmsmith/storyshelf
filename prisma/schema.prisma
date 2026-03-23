@@ -29,8 +29,12 @@ model Book {
   isFeatured  Boolean    @default(false)
   slug        String?    @unique
 
-  categories  BookCategory[] // Many-to-many relation
+  pageCount    Int?      
+  printType    String?   
+  publisher    String?   
+  publishedDate DateTime? 
 
+  categories  BookCategory[] // Many-to-many relation
   orderItems  OrderItem[]   // Relation to OrderItem
 
   @@index([slug])
@@ -41,7 +45,7 @@ model Inventory {
   bookId   Int  @unique
   quantity Int
   book     Book @relation(fields: [bookId], references: [id])
-  
+
   @@index([bookId])
 }
 
@@ -71,7 +75,7 @@ model Order {
   total     Float
   status    String
   createdAt DateTime    @default(now())
-  
+
   items     OrderItem[]
   user      User        @relation(fields: [userId], references: [id])
 
