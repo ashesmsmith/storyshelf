@@ -20,32 +20,31 @@ async function main() {
 
     // Create categories
     const categoryData = [
-        { name: 'Fiction' },
-        { name: 'Fantasy' },
-        { name: 'Science Fiction' },
-        { name: 'Mystery' },
-        { name: 'Romance' },
-        { name: 'Nonfiction' },
-        { name: 'Biography' },
-        { name: 'Self-Help' },
-        { name: 'History' },
-        { name: 'Young Adult' },
+        'Fiction',
+        'Fantasy',
+        'Science Fiction',
+        'Mystery',
+        'Romance',
+        'Nonfiction',
+        'Biography',
+        'Self-Help',
+        'History',
+        'Young Adult',
     ];
 
-    for (const cat of categoryData) {
+    for (const name of categoryData) {
         await prisma.category.create({
             data: {
-                name: cat.name,
-                slug: slugify(cat.name),
+                name,
+                slug: slugify(name),
             },
         });
     }
 
     const categories = await prisma.category.findMany();
-
     const getCategoryId = (name: string) => categories.find((c) => c.name === name)?.id;
 
-    // Books (10 with full data)
+    // 10 books with full data
     const books = [
         {
             isbn: '9780743273565',
@@ -55,10 +54,10 @@ async function main() {
             imageURL: 'https://covers.openlibrary.org/b/isbn/9780743273565-L.jpg',
             price: 10.99,
             pageCount: 180,
-            printType: 'BOOK',
+            printType: 'HARDCOVER',
             publisher: 'Scribner',
             publishedDate: new Date('2004-09-30'),
-            category: 'Fiction',
+            categories: ['Fiction'],
         },
         {
             isbn: '9780439708180',
@@ -68,10 +67,10 @@ async function main() {
             imageURL: 'https://covers.openlibrary.org/b/isbn/9780439708180-L.jpg',
             price: 12.99,
             pageCount: 309,
-            printType: 'BOOK',
+            printType: 'HARDCOVER',
             publisher: 'Scholastic',
             publishedDate: new Date('1998-09-01'),
-            category: 'Fantasy',
+            categories: ['Fantasy', 'Young Adult'],
         },
         {
             isbn: '9780544003415',
@@ -81,10 +80,10 @@ async function main() {
             imageURL: 'https://covers.openlibrary.org/b/isbn/9780544003415-L.jpg',
             price: 11.99,
             pageCount: 300,
-            printType: 'BOOK',
+            printType: 'HARDCOVER',
             publisher: 'Houghton Mifflin',
             publishedDate: new Date('2012-09-18'),
-            category: 'Fantasy',
+            categories: ['Fantasy'],
         },
         {
             isbn: '9780441013593',
@@ -94,10 +93,10 @@ async function main() {
             imageURL: 'https://covers.openlibrary.org/b/isbn/9780441013593-L.jpg',
             price: 14.99,
             pageCount: 412,
-            printType: 'BOOK',
+            printType: 'PAPERBACK',
             publisher: 'Ace',
             publishedDate: new Date('2005-08-02'),
-            category: 'Science Fiction',
+            categories: ['Science Fiction'],
         },
         {
             isbn: '9780307474278',
@@ -107,10 +106,10 @@ async function main() {
             imageURL: 'https://covers.openlibrary.org/b/isbn/9780307474278-L.jpg',
             price: 13.99,
             pageCount: 465,
-            printType: 'BOOK',
+            printType: 'PAPERBACK',
             publisher: 'Vintage Crime',
             publishedDate: new Date('2009-05-26'),
-            category: 'Mystery',
+            categories: ['Mystery', 'Fiction'],
         },
         {
             isbn: '9781501124020',
@@ -120,10 +119,10 @@ async function main() {
             imageURL: 'https://covers.openlibrary.org/b/isbn/9781501124020-L.jpg',
             price: 15.99,
             pageCount: 1138,
-            printType: 'BOOK',
+            printType: 'HARDCOVER',
             publisher: 'Scribner',
             publishedDate: new Date('2016-01-05'),
-            category: 'Fiction',
+            categories: ['Fiction'],
         },
         {
             isbn: '9781451648539',
@@ -133,10 +132,10 @@ async function main() {
             imageURL: 'https://covers.openlibrary.org/b/isbn/9781451648539-L.jpg',
             price: 16.99,
             pageCount: 656,
-            printType: 'BOOK',
+            printType: 'HARDCOVER',
             publisher: 'Simon & Schuster',
             publishedDate: new Date('2011-10-24'),
-            category: 'Biography',
+            categories: ['Biography', 'Nonfiction'],
         },
         {
             isbn: '9780061120084',
@@ -146,10 +145,10 @@ async function main() {
             imageURL: 'https://covers.openlibrary.org/b/isbn/9780061120084-L.jpg',
             price: 9.99,
             pageCount: 336,
-            printType: 'BOOK',
+            printType: 'HARDCOVER',
             publisher: 'Harper Perennial',
             publishedDate: new Date('2006-05-23'),
-            category: 'Fiction',
+            categories: ['Fiction'],
         },
         {
             isbn: '9780553380163',
@@ -159,10 +158,10 @@ async function main() {
             imageURL: 'https://covers.openlibrary.org/b/isbn/9780553380163-L.jpg',
             price: 13.99,
             pageCount: 694,
-            printType: 'BOOK',
+            printType: 'PAPERBACK',
             publisher: 'Bantam',
             publishedDate: new Date('2005-08-01'),
-            category: 'Fantasy',
+            categories: ['Fantasy'],
         },
         {
             isbn: '9780143127741',
@@ -172,10 +171,10 @@ async function main() {
             imageURL: 'https://covers.openlibrary.org/b/isbn/9780143127741-L.jpg',
             price: 18.99,
             pageCount: 498,
-            printType: 'BOOK',
+            printType: 'HARDCOVER',
             publisher: 'Harper',
             publishedDate: new Date('2015-02-10'),
-            category: 'Biography',
+            categories: ['Nonfiction', 'History'],
         },
     ];
 
@@ -188,7 +187,7 @@ async function main() {
                 description: book.description,
                 imageURL: book.imageURL,
                 price: book.price,
-                slug: slugify(book.title),
+                slug: slugify(`${book.title}-${book.isbn}`),
                 pageCount: book.pageCount,
                 printType: book.printType,
                 publisher: book.publisher,
@@ -205,20 +204,21 @@ async function main() {
             },
         });
 
-        // Category relation
-        const categoryId = getCategoryId(book.category);
-
-        if (categoryId) {
-            await prisma.bookCategory.create({
-                data: {
-                    bookId: createdBook.id,
-                    categoryId,
-                },
-            });
+        // Categories
+        for (const catName of book.categories) {
+            const categoryId = getCategoryId(catName);
+            if (categoryId) {
+                await prisma.bookCategory.create({
+                    data: {
+                        bookId: createdBook.id,
+                        categoryId,
+                    },
+                });
+            }
         }
     }
 
-    console.log('✅ Seeded 10 books with full data + inventory');
+    console.log('✅ Seeded books successfully!');
 }
 
 main()

@@ -1,9 +1,21 @@
 'use server';
+
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
+import { generateSlug } from '@/lib/utils/slug';
 
 export async function createBook(formData: FormData) {
-    'use server';
+    const isbn = String(formData.get('isbn') || '');
+
+    if (!isbn) {
+        throw new Error('ISBN is required');
+    }
+
+    // Check for existing book by ISBN before creating a new one
+    const existingBook = await prisma.book.findUnique({ where: { isbn } });
+    if (existingBook) {
+        redirect(`/employee/inventory/${existingBook.id}`);
+    }
 
     const title = String(formData.get('title') || '');
     const author = String(formData.get('author') || '');
@@ -33,14 +45,10 @@ export async function createBook(formData: FormData) {
         )
     );
 
-    // Generate slug & ISBN
-    const slug = title
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9\-]/g, '');
-    const isbn = String(formData.get('isbn') || `isbn-${Date.now()}`);
+    // Generate slug (title + isbn) for uniqueness and SEO
+    const slug = generateSlug(title, isbn);
 
-    // Create book with inventory and categories (using create for many-to-many)
+    // Create book with inventory and categories
     await prisma.book.create({
         data: {
             title,

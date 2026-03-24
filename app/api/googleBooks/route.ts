@@ -1,6 +1,12 @@
 import type { NextRequest } from 'next/server';
 
+type IndustryIdentifier = {
+    type: string;
+    identifier: string;
+};
+
 type GoogleBookAPIResponse = {
+    isbn?: string;
     title?: string;
     authors?: string[];
     description?: string;
@@ -34,12 +40,18 @@ export async function GET(req: NextRequest) {
         );
 
         const data = await res.json();
-
         const book = data.items?.[0]?.volumeInfo;
 
         if (!book) return new Response(JSON.stringify(null), { status: 200 });
 
+        // Extract ISBN
+        const identifiers: IndustryIdentifier[] = book.industryIdentifiers || [];
+        const isbn13 = identifiers.find((id) => id.type === 'ISBN_13')?.identifier;
+        const isbn10 = identifiers.find((id) => id.type === 'ISBN_10')?.identifier;
+        const isbn = isbn13 || isbn10 || '';
+
         const result: GoogleBookAPIResponse = {
+            isbn,
             title: book.title || '',
             authors: book.authors || [],
             description: book.description || '',
