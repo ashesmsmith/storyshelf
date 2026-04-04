@@ -31,11 +31,10 @@ export default function CartPage() {
 
     const fetchCart = async () => {
         try {
+            setLoading(true);
             const res = await fetch('/api/cart');
             const data = await res.json();
-
             if (!res.ok) throw new Error(data.error || 'Failed to load cart');
-
             setCartItems(data.items);
             setError(null);
         } catch (err: unknown) {
@@ -56,20 +55,15 @@ export default function CartPage() {
     const updateQuantity = async (bookId: number, quantity: number) => {
         setUpdatingId(bookId);
 
-        setCartItems((prev) =>
-            prev
-                .map((item) => (item.book?.id === bookId ? { ...item, quantity } : item))
-                .filter((item) => item.quantity > 0)
-        );
-
         try {
             const res = await fetch('/api/cart', {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ bookId, quantity }),
             });
 
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
+            if (!res.ok) throw new Error(data.error || 'Failed to update cart');
 
             if (data.priceChanged) {
                 setError('Price has changed for one or more items.');
@@ -79,12 +73,7 @@ export default function CartPage() {
 
             await fetchCart();
         } catch (err: unknown) {
-            if (err instanceof Error) {
-                setError(err.message);
-            } else {
-                setError('Failed to update cart');
-            }
-
+            setError(err instanceof Error ? err.message : 'Failed to update cart');
             await fetchCart();
         } finally {
             setUpdatingId(null);
@@ -116,7 +105,9 @@ export default function CartPage() {
                                         </p>
                                         <button
                                             className="text-red-500 mt-2"
-                                            onClick={() => updateQuantity(item.id, 0)}
+                                            onClick={() =>
+                                                item.book && updateQuantity(item.book.id, 0)
+                                            }
                                         >
                                             Remove
                                         </button>
