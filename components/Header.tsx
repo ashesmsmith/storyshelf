@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getCurrentUser } from '@/lib/utils/getCurrentUser';
 import { getCartCount } from '@/components/getCartCount';
+import LogoutButton from './LogoutButton';
 
 export default async function Header() {
     const user = await getCurrentUser();
@@ -47,11 +48,7 @@ export default async function Header() {
                             Hi, {user.firstName}
                         </span>
 
-                        <form action="/" method="POST">
-                            <button className="rounded-full border px-4 py-2 text-sm">
-                                Logout
-                            </button>
-                        </form>
+                        <LogoutButton />
                     </>
                 ) : (
                     <>
