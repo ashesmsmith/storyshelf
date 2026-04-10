@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 type Order = {
     id: number;
@@ -38,9 +39,10 @@ export default function OrdersSection() {
             ) : (
                 <div className="space-y-4">
                     {orders.map((order) => (
-                        <div
+                        <Link
                             key={order.id}
-                            className="flex justify-between rounded-3xl border border-[#cad2c5] bg-white p-5 shadow-sm"
+                            href={`/account/orders/${order.id}`}
+                            className="flex justify-between rounded-3xl border border-[#cad2c5] bg-white p-5 shadow-sm transition hover:shadow-md hover:-translate-y-1"
                         >
                             <div>
                                 <p className="font-semibold">Order #{order.id}</p>
@@ -60,7 +62,7 @@ export default function OrdersSection() {
                                     {order.status} • {order.paymentStatus}
                                 </p>
                             </div>
-                        </div>
+                        </Link>
                     ))}
                 </div>
             )}
