@@ -34,8 +34,11 @@ function formatPrice(price: number) {
 
 export default function CheckoutPage() {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const [orderId, setOrderId] = useState<number | null>(null);
     const [loadingCart, setLoadingCart] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [placingOrder, setPlacingOrder] = useState(false);
+
     const [form, setForm] = useState<CheckoutForm>({
         firstName: '',
         lastName: '',
@@ -45,31 +48,27 @@ export default function CheckoutPage() {
         zip: '',
         country: '',
     });
-    const [placingOrder, setPlacingOrder] = useState(false);
-    const [success] = useState(false);
+
+    useEffect(() => {
+        const fetchCart = async () => {
+            const res = await fetch('/api/cart');
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error);
+                return;
+            }
+
+            setCartItems(data.items);
+            setOrderId(data.orderId);
+            setLoadingCart(false);
+        };
+
+        fetchCart();
+    }, []);
 
     const hasInvalidItems = cartItems.some((item) => !item.book);
     const isFormIncomplete = Object.values(form).some((v) => !v.trim());
-
-    const fetchCart = async () => {
-        try {
-            const res = await fetch('/api/cart');
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to load cart');
-
-            setCartItems(data.items);
-            setError(null);
-        } catch (err: unknown) {
-            if (err instanceof Error) setError(err.message);
-            else setError('Failed to load cart');
-        } finally {
-            setLoadingCart(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchCart();
-    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -77,7 +76,7 @@ export default function CheckoutPage() {
 
     const placeOrder = async () => {
         if (hasInvalidItems || cartItems.length === 0 || isFormIncomplete) return;
-        if (placingOrder) return;
+        if (!orderId || placingOrder) return;
 
         setPlacingOrder(true);
         setError(null);
@@ -86,15 +85,17 @@ export default function CheckoutPage() {
             const res = await fetch('/api/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
+                body: JSON.stringify({
+                    ...form,
+                    orderId,
+                }),
             });
 
             const data = await res.json();
 
             if (!res.ok) throw new Error(data.error || 'Failed to place order');
 
-            const url: string = data.url;
-            window.location.href = url;
+            window.location.href = `/checkout/success?orderId=${orderId}`;
         } catch (err: unknown) {
             if (err instanceof Error) setError(err.message);
             else setError('Failed to place order');
@@ -106,13 +107,6 @@ export default function CheckoutPage() {
     const total = cartItems.reduce((sum, item) => sum + (item.book?.price || 0) * item.quantity, 0);
 
     if (loadingCart) return <p className="p-6">Loading cart...</p>;
-    if (success)
-        return (
-            <div className="max-w-xl mx-auto p-6">
-                <h1 className="text-3xl font-bold mb-4">Order Confirmed!</h1>
-                <p>Thank you for your purchase.</p>
-            </div>
-        );
 
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-8">
@@ -180,6 +174,7 @@ export default function CheckoutPage() {
 
                 <button
                     disabled={
+                        !orderId ||
                         placingOrder ||
                         hasInvalidItems ||
                         cartItems.length === 0 ||

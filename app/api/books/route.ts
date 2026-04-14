@@ -1,4 +1,3 @@
-// app/api/books/list/route.ts
 import { NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -9,11 +8,24 @@ export async function GET(req: NextRequest) {
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '12');
         const search = searchParams.get('search')?.trim() || '';
-        const categorySlug = searchParams.get('category') || '';
+        const categorySlug = searchParams.get('category') || searchParams.get('categorySlug') || '';
 
         const skip = (page - 1) * limit;
 
-        const where: any = {};
+        const where: {
+            OR?: {
+                title?: { contains: string; mode: 'insensitive' };
+                author?: { contains: string; mode: 'insensitive' };
+                isbn?: { contains: string; mode: 'insensitive' };
+            }[];
+            categories?: {
+                some: {
+                    category: {
+                        slug: string;
+                    };
+                };
+            };
+        } = {};
 
         if (search) {
             where.OR = [

@@ -17,6 +17,7 @@ export async function createBook(formData: FormData) {
         redirect(`/employee/dashboard/inventory/${existingBook.id}`);
     }
 
+    const imageURL = String(formData.get('imageURL') || '') || 'books-placeholder.png';
     const title = String(formData.get('title') || '');
     const author = String(formData.get('author') || '');
     const description = String(formData.get('description') || '');
@@ -51,6 +52,7 @@ export async function createBook(formData: FormData) {
     // Create book with inventory and categories
     await prisma.book.create({
         data: {
+            imageURL,
             title,
             author,
             description,

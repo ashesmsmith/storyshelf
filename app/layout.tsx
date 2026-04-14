@@ -14,9 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <body className="min-h-screen bg-[#f4f5f2] text-[#2f3e46] antialiased">
                 <Header />
 
-                <main className="flex-1">
-                    {children}
-                </main>
+                <main className="flex-1">{children}</main>
 
                 <footer className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 text-sm text-[#52796f] md:flex-row md:items-center md:justify-between">
                     <div>

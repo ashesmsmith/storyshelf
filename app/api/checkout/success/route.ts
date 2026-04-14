@@ -46,7 +46,10 @@ export async function GET(req: NextRequest) {
         }
 
         if (order.paymentStatus !== PaymentStatus.PAID) {
-            return NextResponse.json({ error: 'Payment not completed yet' }, { status: 400 });
+            return NextResponse.json({
+                order,
+                paid: order.paymentStatus === (PaymentStatus.PAID as PaymentStatus),
+            });
         }
 
         const pendingOrder = await prisma.order.findFirst({

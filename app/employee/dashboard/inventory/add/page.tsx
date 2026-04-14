@@ -126,6 +126,16 @@ export default function AddBookPage() {
                         className="rounded-xl border border-[#cad2c5] px-4 py-3 bg-[#f0f0f0]"
                     />
 
+                    <label>Image URL</label>
+                    <input
+                        name="imageURL"
+                        defaultValue={
+                            selectedBook?.imageLinks?.thumbnail?.replace('http://', 'https://') ||
+                            ''
+                        }
+                        className="rounded-xl border border-[#cad2c5] px-4 py-3 bg-[#f0f0f0]"
+                    />
+
                     <label>Title</label>
                     <input
                         name="title"

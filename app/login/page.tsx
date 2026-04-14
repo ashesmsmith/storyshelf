@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import { emitCartUpdate } from '@/lib/utils/cartEvents';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -36,6 +37,7 @@ export default function LoginPage() {
                 return;
             }
 
+            emitCartUpdate();
             router.push(data.redirectTo || '/');
             router.refresh();
         } catch {

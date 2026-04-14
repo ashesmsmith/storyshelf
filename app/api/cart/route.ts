@@ -43,12 +43,21 @@ export async function GET() {
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+
         const order = await getOrCreateCartOrder(user.id);
+
         const items = await prisma.orderItem.findMany({
             where: { orderId: order.id },
             include: { book: true },
         });
-        return NextResponse.json({ items });
+
+        const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+
+        return NextResponse.json({
+            orderId: order.id,
+            items,
+            totalItems,
+        });
     } catch (error) {
         console.error(error);
         return NextResponse.json({ error: 'Failed to fetch cart' }, { status: 500 });

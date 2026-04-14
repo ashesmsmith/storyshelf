@@ -3,6 +3,7 @@
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { logout } from '@/app/actions';
+import { emitCartUpdate } from '@/lib/utils/cartEvents';
 
 export default function LogoutButton() {
     const router = useRouter();
@@ -13,6 +14,7 @@ export default function LogoutButton() {
             onClick={() => {
                 startTransition(async () => {
                     await logout();
+                    emitCartUpdate();
                     router.refresh();
                 });
             }}

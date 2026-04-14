@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { emitCartUpdate } from '@/lib/utils/cartEvents';
 
 type Category = {
     id: number;
@@ -11,36 +12,35 @@ type Category = {
     slug: string;
 };
 
-type Book = {
+const categories: Category[] = [
+    { id: 1, name: 'Fiction', slug: 'fiction' },
+    { id: 2, name: 'Romance', slug: 'romance' },
+    { id: 3, name: 'Mystery', slug: 'mystery' },
+    { id: 4, name: 'Fantasy', slug: 'fantasy' },
+    { id: 5, name: 'Self-Help', slug: 'self-help' },
+    { id: 6, name: 'Children', slug: 'children' },
+];
+
+type FeaturedBook = {
     id: number;
     title: string;
     author: string;
     price: number;
-    stockQuantity: number;
-    categoryId: number;
+    imageURL?: string | null;
     coverImageUrl?: string | null;
-    isFeatured: boolean;
+    inventory?: { quantity: number };
+    categories?: {
+        category: {
+            name: string;
+        };
+    }[];
 };
-
-function formatPrice(price: number) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(price);
-}
 
 export default function Home() {
     const router = useRouter();
     const [search, setSearch] = useState('');
-    const [featuredBooks, setFeaturedBooks] = useState<any[]>([]);
+    const [featuredBooks, setFeaturedBooks] = useState<FeaturedBook[]>([]);
     const [loadingFeatured, setLoadingFeatured] = useState(true);
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [loadingCategories, setLoadingCategories] = useState(true);
-
-    function getCategoryName(categoryId: number) {
-        const category = categories.find((item) => item.id === categoryId);
-        return category?.name ?? 'Uncategorized';
-    }
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -49,43 +49,21 @@ export default function Home() {
 
         if (!trimmed) return;
 
-        router.push(`/books/inventory?search=${encodeURIComponent(trimmed)}`);
+        router.push(`/books?search=${encodeURIComponent(trimmed)}`);
     };
-    const getCategoryStyle = (slug: string): { icon: string; bg: string; hover: string } => {
-        const lowerSlug = slug.toLowerCase().trim();
-
-        const styleMap: Record<string, { icon: string; bg: string; hover: string }> = {
-            fiction: { icon: '📖', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#84A98C]' },
-            romance: { icon: '❤️', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#e5989b]' },
-            mystery: { icon: '🔍', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#577590]' },
-            fantasy: { icon: '🧙', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#6d597a]' },
-            'self-help': { icon: '💡', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#dda15e]' },
-            children: { icon: '🧸', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#90be6d]' },
-            adventure: { icon: '🏔️', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#4a90e2]' },
-            'sci-fi': { icon: '🚀', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#9b59b6]' },
-            'science-fiction': { icon: '🚀', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#9b59b6]' },
-        };
-
-        if (styleMap[lowerSlug]) {
-            return styleMap[lowerSlug];
-        }
-        for (const [key, style] of Object.entries(styleMap)) {
-            if (lowerSlug.includes(key) || key.includes(lowerSlug)) {
-                return style;
-            }
-        }
-
-        return {
-            icon: '📚',
-            bg: 'bg-[#f1f5f4]',
-            hover: 'hover:bg-[#52796f]',
-        };
+    const categoryStyles: Record<string, { icon: string; bg: string; hover: string }> = {
+        fiction: { icon: '📖', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#84A98C]' },
+        romance: { icon: '❤️', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#e5989b]' },
+        mystery: { icon: '🔍', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#577590]' },
+        fantasy: { icon: '🧙', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#6d597a]' },
+        'self-help': { icon: '💡', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#dda15e]' },
+        children: { icon: '🧸', bg: 'bg-[#f1f5f4]', hover: 'hover:bg-[#90be6d]' },
     };
 
     useEffect(() => {
         const fetchFeatured = async () => {
             try {
-                const res = await fetch('/api/books/list?isFeatured=true&limit=4');
+                const res = await fetch('/api/books?isFeatured=true&limit=4');
                 const data = await res.json();
                 setFeaturedBooks(data.items || []);
             } catch (err) {
@@ -97,24 +75,6 @@ export default function Home() {
         };
 
         fetchFeatured();
-    }, []);
-
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const res = await fetch('/api/categories?limit=6');
-                const data = await res.json();
-                console.log('Fetched categories:', data);
-                setCategories(data);
-            } catch (err) {
-                console.error('Error fetching categories:', err);
-                setCategories([]);
-            } finally {
-                setLoadingCategories(false);
-            }
-        };
-
-        fetchCategories();
     }, []);
 
     return (
@@ -134,38 +94,17 @@ export default function Home() {
                     </h1>
 
                     <p className="mt-6 max-w-xl text-lg leading-8 text-[#52796f]">
-                        Discover stories you'll never forget.
+                        Discover stories you will never forget.
                     </p>
 
                     <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                         <Link
-                            href="/books/inventory"
+                            href="/books"
                             className="rounded-full bg-[#2f3e46] px-6 py-3 text-center font-semibold text-white transition hover:opacity-90"
                         >
                             Browse Books
                         </Link>
                     </div>
-
-                    {/* <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <div className="rounded-2xl border border-[#cad2c5] bg-white p-4 shadow-sm">
-                            <p className="font-semibold text-[#2f3e46]">Structured Data</p>
-                            <p className="mt-1 text-sm text-[#52796f]">
-                                Books, categories, inventory and orders
-                            </p>
-                        </div>
-                        <div className="rounded-2xl border border-[#cad2c5] bg-white p-4 shadow-sm">
-                            <p className="font-semibold text-[#2f3e46]">Easy Search</p>
-                            <p className="mt-1 text-sm text-[#52796f]">
-                                Find books by title, author or category
-                            </p>
-                        </div>
-                        <div className="rounded-2xl border border-[#cad2c5] bg-white p-4 shadow-sm">
-                            <p className="font-semibold text-[#2f3e46]">Stock Control</p>
-                            <p className="mt-1 text-sm text-[#52796f]">
-                                Keep inventory synced with storefront
-                            </p>
-                        </div>
-                    </div> */}
                 </div>
 
                 <div className="rounded-3xl border border-[#cad2c5] bg-white p-6 shadow-lg">
@@ -192,23 +131,6 @@ export default function Home() {
                             </button>
                         </form>
                     </div>
-
-                    {/* <div className="mt-5 rounded-2xl bg-[#2f3e46] p-6 text-white">
-                        <h2 className="text-xl font-semibold">Structured Data Model</h2>
-                        <ul className="mt-4 space-y-3 text-sm text-white/90">
-                            <li>
-                                Books, users, and inventory are structured using relational models.
-                            </li>
-                            <li>
-                                Each book is linked to categories, stock is tracked through quantity
-                                fields,
-                            </li>
-                            <li>
-                                and pricing is stored as numeric values to support accurate
-                                calculations and reporting.
-                            </li>
-                        </ul>
-                    </div> */}
                 </div>
             </section>
 
@@ -224,19 +146,19 @@ export default function Home() {
                     {categories.map((category) => (
                         <Link
                             key={category.id}
-                            href={`/books/inventory?category=${category.slug}`}
+                            href={`/books?category=${category.slug}`}
                             className={`group rounded-2xl border border-[#cad2c5] px-4 py-6 text-center shadow-sm transition-all duration-500 ease-out
-                            ${getCategoryStyle(category.slug).bg}
-                            ${getCategoryStyle(category.slug).hover}
-                            hover:-translate-y-2 hover:text-white
-                            opacity-0 translate-y-6 animate-fadeUp`}
+                                ${categoryStyles[category.slug]?.bg}
+                                ${categoryStyles[category.slug]?.hover}
+                                hover:-translate-y-2 hover:text-white
+                                opacity-0 translate-y-6 animate-fadeUp`}
                             style={{
                                 animationDelay: `${category.id * 0.08}s`,
                                 animationFillMode: 'forwards',
                             }}
                         >
                             <div className="text-3xl transition-transform duration-300 group-hover:scale-110">
-                                {getCategoryStyle(category.slug).icon || '📚'}
+                                {categoryStyles[category.slug]?.icon}
                             </div>
 
                             <p className="mt-3 font-semibold">{category.name}</p>
@@ -257,98 +179,108 @@ export default function Home() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-                    {featuredBooks.map((book) => (
-                        <article
-                            key={book.id}
-                            className="overflow-hidden rounded-3xl border border-[#cad2c5] bg-white shadow-sm transition hover:shadow-md"
-                        >
-                            <div className="flex h-56 items-center justify-center bg-gradient-to-br from-[#84A98C] to-[#354F52] text-lg font-semibold text-white overflow-hidden">
-                                {book.imageURL || book.coverImageUrl ? (
-                                    <Image
-                                        src={book.imageURL || book.coverImageUrl || ''}
-                                        alt={book.title}
-                                        width={220}
-                                        height={220}
-                                        className="h-full w-full object-cover"
-                                    />
-                                ) : (
-                                    <span>Book Cover</span>
-                                )}
-                            </div>
-
-                            <div className="p-5">
-                                <p className="text-sm font-medium text-[#52796f]">
-                                    {book.categories?.[0]?.category?.name || 'General'}
-                                </p>
-
-                                <h3 className="mt-1 text-xl font-semibold text-[#2f3e46] line-clamp-2">
-                                    {book.title}
-                                </h3>
-
-                                <p className="mt-1 text-[#52796f]">{book.author}</p>
-
-                                <div className="mt-3 flex items-center justify-between text-sm">
-                                    <span className="text-[#354f52]">
-                                        Stock: {book.inventory?.quantity ?? 0}
-                                    </span>
-                                    <span
-                                        className={`rounded-full px-3 py-1 font-medium ${
-                                            (book.inventory?.quantity ?? 0) > 0
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-red-100 text-red-700'
-                                        }`}
-                                    >
-                                        {(book.inventory?.quantity ?? 0) > 0
-                                            ? 'Available'
-                                            : 'Out of stock'}
-                                    </span>
+                {loadingFeatured ? (
+                    <p className="text-[#52796f]">Loading featured books...</p>
+                ) : (
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+                        {featuredBooks.map((book) => (
+                            <article
+                                key={book.id}
+                                className="overflow-hidden rounded-3xl border border-[#cad2c5] bg-white shadow-sm transition hover:shadow-md"
+                            >
+                                <div className="flex h-56 items-center justify-center bg-gradient-to-br from-[#84A98C] to-[#354F52] text-lg font-semibold text-white overflow-hidden">
+                                    {book.imageURL || book.coverImageUrl ? (
+                                        <Image
+                                            src={book.imageURL || book.coverImageUrl || ''}
+                                            alt={book.title}
+                                            width={220}
+                                            height={220}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <span>Missing Cover Image</span>
+                                    )}
                                 </div>
 
-                                <div className="mt-5 flex items-center justify-between">
-                                    <span className="font-bold text-[#354f52]">
-                                        {new Intl.NumberFormat('en-US', {
-                                            style: 'currency',
-                                            currency: 'USD',
-                                        }).format(book.price)}
-                                    </span>
+                                <div className="p-5">
+                                    <p className="text-sm font-medium text-[#52796f]">
+                                        {book.categories?.[0]?.category?.name || 'General'}
+                                    </p>
 
-                                    <button className="rounded-xl bg-[#2f3e46] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
-                                        Add to Cart
-                                    </button>
+                                    <h3 className="mt-1 text-xl font-semibold text-[#2f3e46] line-clamp-2">
+                                        {book.title}
+                                    </h3>
+
+                                    <p className="mt-1 text-[#52796f]">{book.author}</p>
+
+                                    <div className="mt-3 flex items-center justify-between text-sm">
+                                        <span className="text-[#354f52]">
+                                            Stock: {book.inventory?.quantity ?? 0}
+                                        </span>
+                                        <span
+                                            className={`rounded-full px-3 py-1 font-medium ${
+                                                (book.inventory?.quantity ?? 0) > 0
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-red-100 text-red-700'
+                                            }`}
+                                        >
+                                            {(book.inventory?.quantity ?? 0) > 0
+                                                ? 'Available'
+                                                : 'Out of stock'}
+                                        </span>
+                                    </div>
+
+                                    <div className="mt-5 flex items-center justify-between">
+                                        <span className="font-bold text-[#354f52]">
+                                            {new Intl.NumberFormat('en-US', {
+                                                style: 'currency',
+                                                currency: 'USD',
+                                            }).format(book.price)}
+                                        </span>
+
+                                        <button
+                                            onClick={async () => {
+                                                const res = await fetch('/api/cart', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({
+                                                        bookId: book.id,
+                                                        quantity: 1,
+                                                    }),
+                                                });
+
+                                                if (res.status === 401) {
+                                                    router.push('/login');
+                                                    return;
+                                                }
+
+                                                if (!res.ok) {
+                                                    alert('Failed to add to cart');
+                                                    return;
+                                                }
+
+                                                emitCartUpdate();
+                                                alert('Added to cart');
+                                            }}
+                                            disabled={(book.inventory?.quantity ?? 0) <= 0}
+                                            className={`rounded-xl px-4 py-2 text-sm font-semibold text-white
+                                            ${
+                                                (book.inventory?.quantity ?? 0) <= 0
+                                                    ? 'bg-gray-400 cursor-not-allowed'
+                                                    : 'bg-[#2f3e46] hover:opacity-90'
+                                            }`}
+                                        >
+                                            {(book.inventory?.quantity ?? 0) <= 0
+                                                ? 'Out of Stock'
+                                                : 'Add to Cart'}
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </article>
-                    ))}
-                </div>
+                            </article>
+                        ))}
+                    </div>
+                )}
             </section>
-
-            {/* <section
-                id="about"
-                className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-6 py-8 md:grid-cols-3 md:py-14"
-            >
-                <Link href="/books" className="block"><div className="rounded-3xl border border-[#cad2c5] bg-white p-6 shadow-sm">
-                    <h3 className="text-xl font-semibold text-[#2f3e46]">Books</h3>
-                    <p className="mt-3 leading-7 text-[#52796f]">
-                        Main catalog table with title, author, price, stock, image and category
-                        relation.
-                    </p>
-                </div></Link>
-
-                <div className="rounded-3xl border border-[#cad2c5] bg-white p-6 shadow-sm">
-                    <h3 className="text-xl font-semibold text-[#2f3e46]">Categories</h3>
-                    <p className="mt-3 leading-7 text-[#52796f]">
-                        Separate table for categories, linked to books through foreign keys.
-                    </p>
-                </div>
-
-                <div className="rounded-3xl border border-[#cad2c5] bg-white p-6 shadow-sm">
-                    <h3 className="text-xl font-semibold text-[#2f3e46]">Orders</h3>
-                    <p className="mt-3 leading-7 text-[#52796f]">
-                        Prepared for relational order flow with users, orders and order_items.
-                    </p>
-                </div>
-            </section> */}
 
             <section className="mx-auto max-w-7xl px-6 py-8 md:py-14">
                 <div className="flex flex-col justify-between gap-6 rounded-3xl bg-gradient-to-r from-[#84A98C] to-[#52796f] p-8 text-white md:flex-row md:items-center">

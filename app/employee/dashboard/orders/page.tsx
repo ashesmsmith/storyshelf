@@ -19,7 +19,7 @@ export default async function OrdersPage({
             NOT: {
                 status: 'PENDING',
                 paymentStatus: 'PENDING',
-            }
+            },
         },
         include: { user: true },
         orderBy: { createdAt: 'desc' },

@@ -5,7 +5,7 @@ export async function requireEmployee() {
     const user = await getCurrentUser();
 
     if (!user) {
-        redirect('/employee/login');
+        redirect('/login');
     }
 
     if (user.role !== 'employee') {
